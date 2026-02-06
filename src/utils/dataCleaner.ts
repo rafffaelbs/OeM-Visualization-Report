@@ -92,7 +92,8 @@ export const transformProblemLogs = (workbookOcorrencia: XLSX.WorkBook): PlantPr
       } else if (typeof startTime === 'string') {
         dateValue = startTime;
       }
-
+      
+        
       groupedProblems.set(groupKey, {
         id: index,
         name: ufvName,
@@ -100,7 +101,7 @@ export const transformProblemLogs = (workbookOcorrencia: XLSX.WorkBook): PlantPr
         observation: row['Observação'] || '',
         when: dateValue, 
         end: row['Fim'] || null,
-        duration: row['Duração'] || '00:00:00',
+        duration: row['Duração'] instanceof Date ? row['Duração'].toLocaleTimeString() : (row['Duração'] || '00:00:00'),
         equipamentos: tag ? [tag] : [],
         resolution: row['Resolução'] || '',
         status: hasEnd ? 'Concluido' : 'Aberto'
