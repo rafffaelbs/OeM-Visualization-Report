@@ -1,15 +1,20 @@
-export interface PlantMetrics {
+export interface DashboardData {
+  registry: PlantMetadata[]; // Array of all available plants and their info
+  dailyData: DayData[];      // Your time-series data
+}
+
+export interface PlantMetadata {
+  id: string;
   name: string;
-  actual: number;
+  uf: string;
+  complexo: string;
+}
+
+export interface PlantDailyMetrics {
+  actual: number,
   expected: number;
   performance: number;
-  problems: PlantProblems[]; 
-}
-export interface DayData {
-  DIA: string;
-  plants: {
-    [plantName: string]: PlantMetrics;
-  };
+  problems:PlantProblems[]; 
 }
 
 export interface PlantProblems {
@@ -24,3 +29,11 @@ export interface PlantProblems {
   status: 'Aberto' | 'Concluido';
   resolution: string;    // Mapped from 'Resolução'
 }
+
+export interface DayData {
+  DIA: string;
+  plants: {
+    [plantName: string]: PlantDailyMetrics;
+  };
+}
+
