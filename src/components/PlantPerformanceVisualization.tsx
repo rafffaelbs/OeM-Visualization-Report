@@ -296,19 +296,6 @@ const loadExcelData = async () => {
     return { totalActual, totalExpected, avgPerformance, generalAvailability: generalAvail, technicalAvailability: technicalAvail };
   }, [chartData, activePlantNames, filteredProblems]);
 
-  const getAvailabilityColor = (avail: number) => {
-    if (avail >= 99.5) return 'bg-green-500';
-    if (avail >= 98) return 'bg-green-400';
-    if (avail >= 95) return 'bg-yellow-400';
-    return 'bg-red-500';
-  };
-
-  const getAvailabilityTextColor = (val: number, isSelected: boolean) => {
-    if (isSelected) return 'text-white';
-    if (val >= 98) return 'text-green-600';
-    if (val >= 95) return 'text-orange-600';
-    return 'text-red-600';
-  };
 
   // --- UPDATED TOOLTIP ---
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -376,7 +363,7 @@ const loadExcelData = async () => {
             </div>
           </div>
         </div>
-        
+
         {/* Right Side: KPIs */}
         <div className="w-[62.5%] flex items-center justify-start gap-4 h-full py-6 pl-65 overflow-x-auto custom-scrollbar">
           

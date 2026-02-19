@@ -350,7 +350,7 @@ const MultiPlantDashboard = () => {
             {/* Statistics Cards */}
             {selectedPlants.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                {selectedPlants.map((plant, idx) => (
+                {selectedPlants.map((plant) => (
                   <div key={plant} className="bg-white rounded-xl shadow-lg p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <div 
@@ -410,7 +410,7 @@ const MultiPlantDashboard = () => {
                         formatter={(value) => `${Number(value).toFixed(2)} MWh`}
                       />
                       <Legend />
-                      {selectedPlants.map((plant, idx) => (
+                      {selectedPlants.map((plant) => (
                         <Line
                           key={plant}
                           type="monotone"
@@ -441,7 +441,7 @@ const MultiPlantDashboard = () => {
                         formatter={(value) => `${Number(value).toFixed(2)} MWh`}
                       />
                       <Legend />
-                      {selectedPlants.map((plant, idx) => (
+                      {selectedPlants.map((plant) => (
                         <Bar
                           key={plant}
                           dataKey={plant}
