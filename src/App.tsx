@@ -1,7 +1,7 @@
 import PlantPerformanceVisualization from './components/PlantPerformanceVisualization';
 
 function App() {
-  return <PlantPerformanceVisualization />;
+  return <PlantPerformanceVisualization/>;
 }
 
 export default App;  // <--- THIS LINE IS CRITICAL

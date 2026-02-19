@@ -34,32 +34,71 @@ export const parseDurationToHours = (duration: string | number): number => {
 };
 
 // Reads the static plant data (State, Complex, Name)
-export const transformPlantRegistry = (workbook: XLSX.WorkBook): PlantMetadata[] => {
+export const transformPlantRegistry = (
+  metadataWorkbook: XLSX.WorkBook,
+  capacityWorkbook: XLSX.WorkBook // Added second workbook parameter
+): PlantMetadata[] => {
+  
+  // 1. Process Base Metadata
   const sheetName = 'Dados Inversores';
-  const worksheet = workbook.Sheets[sheetName];
+  const worksheet = metadataWorkbook.Sheets[sheetName];
+  let uniqueRegistry: PlantMetadata[] = [];
   
   if (!worksheet) {
     console.warn(`Sheet "${sheetName}" not found in registry file.`);
-    return [];
+  } else {
+    const rawData: any[] = XLSX.utils.sheet_to_json(worksheet);
+    const registry: PlantMetadata[] = rawData
+      .filter((row: any) => row['Nome Monitoramento Brasol'] && row['Estado'])
+      .map((row: any) => ({
+        id: String(row['Nome Monitoramento Brasol']).trim(),
+        name: String(row['Nome Monitoramento Brasol']).trim(),
+        uf: String(row['Estado']).trim(),
+        complexo: String(row['Complexo']).trim(),
+      }));
+
+    // Deduplicate
+    uniqueRegistry = Array.from(new Map(registry.map(item => [item.name, item])).values());
   }
 
-  // Using raw: false ensures we get strings, but usually raw: true is safer for mixed types. 
-  // We will stick to json and manual parsing.
-  const rawData: any[] = XLSX.utils.sheet_to_json(worksheet);
+  // 2. Process Capacities from the second workbook
+  const capacityMap = new Map<string, number>();
+  const capacitySheetName = 'TABELA RESUMO - P50';
+  const capacitySheet = capacityWorkbook.Sheets[capacitySheetName];
 
-  const registry: PlantMetadata[] = rawData
-    .filter((row: any) => row['Nome Monitoramento Brasol'] && row['Estado']) // Skip empty rows
-    .map((row: any) => ({
-      id: String(row['Nome Monitoramento Brasol']).trim(),
-      name: String(row['Nome Monitoramento Brasol']).trim(),
-      uf: String(row['Estado']).trim(),
-      complexo: String(row['Complexo']).trim(),
-    }));
+  if (capacitySheet) {
+    const capacityData: any[] = XLSX.utils.sheet_to_json(capacitySheet);
+    
+    capacityData.forEach((row: any) => {
+      // Robust key matching to handle potential trailing spaces in Excel headers
+      const usinaKey = Object.keys(row).find(k => k.trim().toUpperCase() === 'USINA');
+      const pwrKey = Object.keys(row).find(k => k.trim().toUpperCase().includes('POTÊNCIA INSTALADA'));
 
-  // Deduplicate (just in case the Excel has multiple rows per plant)
-  const uniqueRegistry = Array.from(new Map(registry.map(item => [item.name, item])).values());
-  
-  return uniqueRegistry;
+      if (usinaKey && pwrKey && row[usinaKey] && row[pwrKey] !== undefined) {
+        const plantName = String(row[usinaKey]).trim();
+        let capacityVal = row[pwrKey];
+
+        // Convert Brazilian number string format ("1.900,00") to float if necessary
+        if (typeof capacityVal === 'string') {
+          capacityVal = parseFloat(capacityVal.replace(/\./g, '').replace(',', '.'));
+        } else {
+          capacityVal = Number(capacityVal);
+        }
+
+        if (!isNaN(capacityVal)) {
+          capacityMap.set(plantName, capacityVal);
+        }
+      }
+    });
+  } else {
+    console.warn(`Sheet "${capacitySheetName}" not found in capacity workbook.`);
+  }
+
+  // 3. Merge capacity into the registry
+  return uniqueRegistry.map(plant => ({
+    ...plant,
+    capacity: capacityMap.get(plant.name) || 0 // Maps the capacity, defaults to 0 if not found
+  }));
 };
 
 // Reads the daily generation numbers (Actual vs P50)
@@ -155,9 +194,6 @@ export const transformDashboardData = (workbookGeracao: XLSX.WorkBook): DayData[
 
   return result;
 };
-// utils/dataCleaner.ts
-
-// utils/dataCleaner.ts
 
 export const transformProblemLogs = (workbookOcorrencia: XLSX.WorkBook): PlantProblems[] => {
   const groupedProblems = new Map<string, any>();
