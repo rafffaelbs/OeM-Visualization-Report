@@ -63,7 +63,7 @@ const ProblemDot = (props: any) => {
   return null;
 };
 
-const PlantPerformanceVisualization = () => {
+const SolarTelemetryDashboard = () => {
   // --- State Definitions ---
   const [registry, setRegistry] = useState<PlantMetadata[]>([]);
   const [data, setData] = useState<DayData[]>([]);
@@ -387,7 +387,7 @@ const loadExcelData = async () => {
               <span className="text-2xl font-bold text-black leading-none">
                 {(totalCapacity / 1000).toFixed(2)}
               </span>
-              <span className="text-[10px] text-gray-500 font-medium mt-1 uppercase">MWp Inst.</span>
+              <span className="text-[10px] text-gray-500 font-medium mt-1 uppercase">MWp.</span>
             </div>
           </div>
 
@@ -708,4 +708,4 @@ const loadExcelData = async () => {
   );
 };
 
-export default PlantPerformanceVisualization;
+export default SolarTelemetryDashboard;

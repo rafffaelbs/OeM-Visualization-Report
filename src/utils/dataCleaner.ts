@@ -107,70 +107,50 @@ export const transformDashboardData = (workbookGeracao: XLSX.WorkBook): DayData[
   const worksheet = workbookGeracao.Sheets[sheetName];
   if (!worksheet) return [];
 
-  // Read data starting from Row 5 (headers)
   const rawData = XLSX.utils.sheet_to_json(worksheet, { range: 4, header: 1, defval: 0 }) as any[][];
-
   if (rawData.length < 5) return [];
 
   const headerRow = rawData[0];      // Row 5
   const expectedRow = rawData[2];    // Row 7 (P50)
-  const actualDataRows = rawData.slice(3); // Row 8+ (Daily Data)
+  
+  // FIX 1: Strictly slice exactly 31 rows (Day 1 to 31) to ignore summary rows at the bottom
+  const actualDataRows = rawData.slice(3, 34); 
 
   const result: DayData[] = [];
   const PLANTS_PER_BLOCK = 69;
   const TOTAL_COL_PER_BLOCK = 70;
 
-  // Loop through 12 months
   for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
-    
-    // Calculate column offset
     const startCol = 1 + (monthIndex * TOTAL_COL_PER_BLOCK);
     const endCol = startCol + PLANTS_PER_BLOCK - 1; 
 
-    // Stop if we run out of headers
     if (!headerRow[startCol]) break;
 
-    const monthData = actualDataRows.map((row) => {
-      const rawDia = row[0];
-      let dayNumber = -1;
+    // Get the maximum number of days for this specific month (e.g., 28 for Feb)
+    const maxDaysInMonth = new Date(2026, monthIndex + 1, 0).getDate();
 
-      // --- RESTORED LOGIC: Handle Excel Serial Dates ---
-      if (typeof rawDia === 'number') {
-        // If the number is huge (e.g. 43648), it's a serial date.
-        // If it's small (e.g. 5), it's just the day.
-        if (rawDia > 31) {
-           const dateInfo = XLSX.SSF.parse_date_code(rawDia);
-           dayNumber = dateInfo.d; // Extract just the day (1-31)
-        } else {
-           dayNumber = rawDia;
-        }
-      } else {
-        // Handle text strings like "1" or "01"
-        dayNumber = parseInt(String(rawDia).trim(), 10);
-      }
-      // -------------------------------------------------
+    const monthData = actualDataRows.map((row, index) => {
+      // FIX 2: Force the day number based on the row position (1 to 31) 
+      // This completely bypasses messy Excel date parsing!
+      const dayNumber = index + 1; 
 
-      // Validation: Skip rows that are still invalid (like "Total" or empty rows)
-      if (isNaN(dayNumber) || dayNumber < 1 || dayNumber > 31) return null;
+      // Skip days that don't exist in this month (like Feb 30th)
+      if (dayNumber > maxDaysInMonth) return null;
 
-      // Construct the date for the chart: 2026-MM-DD
       const currentMonth = (monthIndex + 1).toString().padStart(2, '0');
       const dayLabel = `2026-${currentMonth}-${dayNumber.toString().padStart(2, '0')}`;
 
       const plantMetrics: { [key: string]: PlantDailyMetrics } = {};
       let hasData = false;
 
-      // Loop only through the columns for THIS month
       for (let c = startCol; c <= endCol; c++) {
         const plantName = headerRow[c]?.toString().trim();
         if (!plantName) continue;
 
         const actual = typeof row[c] === 'number' ? row[c] : parseFloat(row[c]) || 0;
-        
         const expectedVal = expectedRow[c];
         const expected = typeof expectedVal === 'number' ? expectedVal : parseFloat(expectedVal) || 0;
 
-        // Optimization: Skip empty data points
         if (actual === 0 && expected === 0) continue;
 
         const performance = expected === 0 ? 0 : (actual / expected) * 100;
@@ -185,7 +165,6 @@ export const transformDashboardData = (workbookGeracao: XLSX.WorkBook): DayData[
       }
 
       if (!hasData) return null;
-
       return { DIA: dayLabel, plants: plantMetrics };
     }).filter(Boolean) as DayData[];
 
