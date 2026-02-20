@@ -117,8 +117,8 @@ export const transformDashboardData = (workbookGeracao: XLSX.WorkBook): DayData[
   const actualDataRows = rawData.slice(3, 34); 
 
   const result: DayData[] = [];
-  const PLANTS_PER_BLOCK = 69;
-  const TOTAL_COL_PER_BLOCK = 70;
+  const PLANTS_PER_BLOCK = 68;
+  const TOTAL_COL_PER_BLOCK = 69;
 
   for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
     const startCol = 1 + (monthIndex * TOTAL_COL_PER_BLOCK);
