@@ -78,7 +78,7 @@ const SolarTelemetryDashboard = () => {
   const [selectedMonth, setSelectedMonth] = useState<string[]>([]); 
 
   const GERACAO_URL = "/data/CONTROLE DE Geração 03_2026_MARÇO.xlsm";
-  const OCORRENCIAS_URL = "/data/022026_Geração_Disponibilidade_REV00.xlsx";
+  const OCORRENCIAS_URL = "/data/022026_Geração_Disponibilidade_REV00_ajustes.xlsx";
   const METADATA_URL = '/data/Inversores_REV11_BC_Brasol.xlsx';
 
   useEffect(() => {
